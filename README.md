@@ -1,6 +1,6 @@
 # The Unofficial Guide
 
-<!-- TC — Corpus: campus_life -->
+TC — Corpus: campus_life
 
 > **This file is your submission.** Fill it in as you go — most sections get
 > written during the milestone that produces them, not at the end.

@@ -128,18 +128,9 @@ I kept the cutoff at `0.6` because it falls clearly between those two groups. A 
 
 ## How I Used AI
 
-<!-- Two specific moments. For each: what you asked for, what came back, and
-     what you changed about it.
+**1.** I used AI to help me think through the chunking strategy for the `campus_life` corpus. At first, we considered splitting on paragraph boundaries, but after looking at the documents I decided to keep each short post as one chunk because splitting them could separate a heading, course name, service name, or location from the fact it explains. I used the AI explanation to understand the tradeoff, but the final decision was based on the structure of my corpus.
 
-     "I asked Claude to write the chunking function from my notes. It ignored
-     the overlap, so I added that myself" is the level of detail we're after.
-     "I used AI to help me code" is not.
-
-     Milestone 5. -->
-
-**1.**
-
-**2.**
+**2.** I used AI to help me refine my acceptance criteria into specific, testable statements. I explained what I cared about, such as making sure answers are supported by retrieved evidence and that the system refuses questions outside the corpus, and the AI helped turn those ideas into measurable wording. I changed the wording so the criteria reflected my own examples and standards, including checking exact facts against retrieved chunks instead of just accepting answers that sounded reasonable.git status
 
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never

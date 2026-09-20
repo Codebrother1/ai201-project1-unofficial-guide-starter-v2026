@@ -101,31 +101,30 @@ Laundry costs $1.75 wash, $1.75 dry, app-based. On noise: moderate; the building
 
 ## Sample Answer
 
-<!-- One complete question and answer, pasted as text, with the source line
-     visible. Milestone 4. -->
+**Question:** How are housing lottery numbers determined for juniors and seniors?
 
-**Question:**
+**Answer:** Juniors and seniors are ordered by accumulated credit hours first, with a random tie-break used only when necessary.
 
-**Answer:**
+**Source:** `admin_housing_lottery.txt`
 
-```
+**My relevance cutoff:** `0.6`
 
-```
+My five in-scope questions had best retrieval distances from `0.1467` to `0.3079`. My five out-of-scope questions had best distances from `0.8246` to `0.9340`.
 
-**My relevance cutoff:**
+I kept the cutoff at `0.6` because it falls clearly between those two groups. A lower cutoff could reject questions my corpus can actually answer, while a much higher cutoff could let unrelated questions through and give the model a chance to answer without relevant evidence.
 
-<!-- The number you set in config.py, and how you got there.
-
-     You ran five questions your corpus covers and the five in OUT_OF_SCOPE
-     that it clearly doesn't, and wrote down the best distance for each. What
-     did those two groups look like? Where was the gap? Put the actual numbers
-     here — the table below wants all ten rows.
-
-     Milestone 4. -->
-
-| Question | In corpus? | Best distance |
-| -------- | ---------- | ------------- |
-|          |            |               |
+| Question                 | In corpus? | Best distance |
+| ------------------------ | ---------- | ------------: |
+| Housing lottery          | Yes        |        0.1969 |
+| Dining dollars           | Yes        |        0.2206 |
+| Parking permits          | Yes        |        0.2085 |
+| Library holds            | Yes        |        0.1467 |
+| CS 210 exams             | Yes        |        0.3079 |
+| Capital of Mongolia      | No         |        0.8246 |
+| Diesel engine oil change | No         |        0.9340 |
+| 1994 World Cup           | No         |        0.8859 |
+| Ibuprofen dosage         | No         |        0.8442 |
+| Rust for loop            | No         |        0.8960 |
 
 ## How I Used AI
 

@@ -21,11 +21,7 @@ TC — Corpus: campus_life
 
 ## What This Does
 
-<!-- Three or four sentences. Which corpus you picked, and the kinds of
-     questions your system answers. Write it for someone who has never seen
-     this repo.
-
-     Milestone 5. -->
+This project builds a RAG system over the `campus_life` corpus and defines in advance what a correct, working answer should look like. I chose how the documents should be chunked, tuned retrieval so the system brings back relevant information, and set a relevance cutoff so it can refuse questions that are not supported by the corpus. When the system does answer, it uses retrieved evidence and names the source document so the information can be checked.
 
 ## Chunking Strategy
 

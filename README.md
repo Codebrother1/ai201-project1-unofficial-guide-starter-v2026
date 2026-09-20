@@ -27,17 +27,9 @@ This project builds a RAG system over the `campus_life` corpus and defines in ad
 
 I keep each `campus_life` document as one chunk because the posts are already short. Splitting them further could separate a heading, service name, course name, or location from the sentence containing the useful fact. Keeping each post whole preserves complete sentences and enough context for the chunk to stand on its own.
 **Chunk size:**
-**Overlap:**
+One whole `campus_life` document per chunk; no fixed character size.
 
-<!-- What about YOUR documents made you pick these numbers? Short posts and
-     long sectioned guides don't want the same chunking, and "800 seemed
-     reasonable" earns nothing. Point at something you noticed when you read
-     the documents in Milestone 1.
-
-     If you changed your mind partway through, say so and say why. That's worth
-     more than pretending you got it right first time.
-
-     Milestone 3. -->
+**Overlap:** None.
 
 ## Sample Chunks
 

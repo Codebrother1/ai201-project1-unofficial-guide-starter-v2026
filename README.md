@@ -426,55 +426,161 @@ means the generation stage receives more irrelevant context than it needs.
 
 **What I changed:**
 
-I will reduce retrieval `TOP_K` from `5` to `3` in `config.py`.
+I reduced retrieval `TOP_K` from `5` to `3` in `config.py`.
+
 **Why I picked it:**
 
 The baseline showed that the answer-bearing document was already ranked highly
-for all five test questions, but the five-result retrieval set also contained
-unrelated distractor chunks. Reducing `TOP_K` from 5 to 3 should give the model
-less irrelevant context while still preserving the evidence needed to answer
-the questions. I will measure the full test again to see whether that actually
-helps or hurts.
+for all five test questions, but retrieving five chunks also brought several
+unrelated distractor chunks into the generation context. For example, the
+housing question retrieved the correct `admin_housing_lottery.txt` document
+along with unrelated parking, advising, statistics, and housing documents.
+
+Reducing `TOP_K` from 5 to 3 tests whether I can remove some irrelevant
+retrieval context without losing the evidence needed to answer the questions.
 
 ### Run Log — After
 
+The After evaluation is saved in
+`results/run_2026-09-23_2022_after.md` and was produced by
+`run_eval.py::main`.
+
 | Criterion                                             | Target | Run 1 | Run 2 | Run 3 | Verdict |
 | ----------------------------------------------------- | ------ | ----- | ----- | ----- | ------- |
-| 1. Retrieved chunk contains the answer                | 4 of 5 |       |       |       |         |
-| 2. Every answer names a source                        | 5 of 5 |       |       |       |         |
-| 3. Gate stops out-of-corpus questions                 | 4 of 5 |       |       |       |         |
-| 4. Chunks keep complete sentences                     | 4 of 5 |       |       |       |         |
-| 5. Specific facts are supported by retrieved evidence | 4 of 5 |       |       |       |         |
+| 1. Retrieved chunk contains the answer                | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 2. Every answer names a source                        | 5 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 3. Gate stops out-of-corpus questions                 | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 4. Chunks keep complete sentences                     | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 5. Specific facts are supported by retrieved evidence | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+
+### Real Output — After
+
+With `TOP_K = 3`, the answer-bearing source was still retrieved for all five
+questions.
+
+```text
+Housing:
+Best distance: 0.1969
+Sources retrieved: admin_housing_lottery.txt,
+advising_registration.txt, course_stat_150_exams.txt
+
+Answer:
+For juniors and seniors, housing lottery numbers are ordered by accumulated
+credit hours first, with a random tie-break used only when necessary
+(admin_housing_lottery.txt).
+
+
+Dining:
+Best distance: 0.2206
+Sources retrieved: admin_dining_dollars.txt,
+admin_meal_plan_changes.txt, dining_halden_hall.txt
+
+Answer:
+No, unused dining dollars do not roll over from the spring semester to the
+following autumn; whatever is left in May disappears
+(admin_dining_dollars.txt).
+
+
+Parking:
+Best distance: 0.2085
+Sources retrieved: admin_parking_permits.txt,
+advising_registration.txt, dining_halden_hall.txt
+
+Answer:
+Student permits for the west lots sell out in about three days
+(admin_parking_permits.txt).
+
+
+Library:
+Best distance: 0.1467
+Sources retrieved: admin_library_holds.txt,
+dining_verrill_street_grill_followup.txt, money_textbooks.txt
+
+Answer:
+A hold on a checked-out book usually arrives in two to three days.
+
+Source: admin_library_holds.txt
+
+
+CS 210:
+Best distance: 0.3079
+Sources retrieved: course_cs_210_exams.txt,
+course_cs_340_exams.txt, course_engl_205_exams.txt
+
+Answer:
+The CS 210 exams are drawn from lecture material rather than the textbook
+(course_cs_210_exams.txt).
+```
+
+The relevance gate also continued to refuse all five out-of-corpus questions:
+
+```text
+refused  (best distance 0.825)  What is the capital of Mongolia?
+refused  (best distance 0.934)  How do I change the oil in a diesel engine?
+refused  (best distance 0.886)  Who won the 1994 World Cup?
+refused  (best distance 0.844)  What is the recommended dosage of ibuprofen for a headache?
+refused  (best distance 0.896)  How do I write a for loop in Rust?
+-> gate refused 5 of 5
+```
+
+For Criterion 4, I ran `python app.py chunks -n 5` three times after the
+improvement. The same five chunks were sampled each time, and all 5 of 5 began
+and ended on complete sentence/document boundaries.
 
 **Did it help?**
 
-To be completed after running:
+Yes, but the improvement was in efficiency rather than in the acceptance
+scores.
 
-`python run_eval.py --label after`
+Before the change, `TOP_K = 5` used 8,914 tokens during the evaluation.
+After reducing `TOP_K` to 3, the same evaluation used 5,894 tokens. That is
+3,020 fewer tokens, or about a 34% reduction.
 
-I will compare this run log directly with the Before run log and report whether
-reducing `TOP_K` from 5 to 3 improved, preserved, or hurt the measured results.
+At the same time, all five acceptance criteria remained MET in all three runs.
+The answer-bearing source remained in the retrieved results for every test
+question, every generated answer still named a real source, the relevance gate
+still refused 5 of 5 out-of-corpus questions, the chunk-boundary criterion
+remained 5 of 5, and the factual details remained supported by retrieved
+evidence.
+
+So reducing `TOP_K` removed some unnecessary retrieval context without causing
+a measured regression on these tests.
 
 ## What's Still Broken
 
-To be completed after the After evaluation.
+No acceptance criterion is still missed after the improvement.
 
-If any criterion is missed after the improvement, I will state which pipeline
-stage caused the remaining problem, what I would change next, and why I stopped
-after this one measured improvement.
+However, the retrieval results still contain some distractor chunks even with
+`TOP_K = 3`. For example, the housing query still retrieves
+`advising_registration.txt` and `course_stat_150_exams.txt` along with the
+correct housing document.
 
-If all five criteria are still met, I will still report any remaining weakness
-I observed rather than claiming the system is perfect.
+If I continued improving the system, I would investigate a retrieval method
+that better handles exact names and terms, such as hybrid semantic and keyword
+search. I stopped after the `TOP_K` change because Unit 2 requires one change
+to be isolated and measured so that its effect can be compared clearly.
 
 ## What I'd Do Differently
 
 Knowing what I know now, I would write Criterion 4 more strictly.
 
 The original criterion required at least 4 of 5 sampled `campus_life` chunks
-to contain complete sentence boundaries. Because my chunking strategy keeps
-each short document intact and produced 5 of 5 complete chunks every time I
-checked it, I would set the target to 5 of 5 in a future version.
+to contain complete sentence boundaries. Because my whole-document chunking
+strategy keeps each short document intact and produced 5 of 5 complete chunks
+every time I checked it, I would set the target to 5 of 5 in a future version.
 
-I would not change the original Unit 1 criterion now because it was measurable
+I would not rewrite the original Unit 1 criterion now because it was measurable
 as written and existed before I saw the results. The stricter 5-of-5 target is
 what I learned from testing it.
+
+## How I Used AI — Unit 2
+
+I used AI as a testing and debugging partner while I worked through Unit 2.
+It helped me separate question-level results from criterion-level measurements,
+check my MET/MISSED decisions against the frozen Unit 1 targets, and identify
+that my chunk-boundary criterion had been set too low.
+
+I also used AI to help notice the pattern of irrelevant distractor documents
+in the retrieval results. I chose the actual improvement myself: reducing
+`TOP_K` from 5 to 3. I then ran the before and after evaluations rather than
+assuming the change would help, and used the measured results in this README.

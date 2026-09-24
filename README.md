@@ -576,26 +576,119 @@ what I learned from testing it.
 
 ## Stretch Feature — Second Measured Improvement
 
-I am doing the optional second measured improvement for Unit 2.
+I completed the optional second measured improvement for Unit 2.
 
-**What I will change:**
+**What I changed:**
 
-I will add hybrid retrieval that combines the existing semantic vector search
-with BM25 keyword search.
+I changed retrieval from semantic vector search alone to hybrid retrieval that
+combines the existing semantic ranking with BM25 keyword ranking.
+
+The hybrid retriever first gets a larger semantic candidate pool from Chroma,
+then uses BM25 to add an exact-term signal. The two rankings are combined with
+weighted reciprocal-rank fusion, with semantic retrieval weighted more heavily.
+The final system still returns `TOP_K = 3`.
+
+I preserved each result's original cosine distance so the existing relevance
+gate still uses the same `0.6` distance scale.
 
 **Why I picked it:**
 
-After reducing `TOP_K` from 5 to 3, all five criteria still passed, but the
-retrieved results still included unrelated distractor documents. Hybrid search
-may help queries with exact names, course numbers, locations, and phrases by
-combining semantic similarity with exact-term matching.
+After my first improvement reduced `TOP_K` from 5 to 3, all five acceptance
+criteria still passed, but some retrieved results were still unrelated
+distractors. Hybrid search was intended to help questions containing exact
+names, course numbers, locations, and phrases while preserving semantic
+matching.
 
-**How I will measure it:**
+### Run Log — Hybrid
 
-I will run the same five acceptance criteria again with three runs each and
-save a third run log. I will compare the hybrid-search results with the
-`TOP_K = 3` After results and report whether the second improvement helped,
-hurt, or preserved the measured performance.
+The third evaluation is saved in
+`results/run_2026-09-23_2111_hybrid.md` and was produced by
+`run_eval.py::main`.
+
+Retrieval was performed by the hybrid version of `store.py::search`, and chunks
+were still produced by `chunker.py::split_documents`.
+
+| Criterion                                             | Target | Run 1 | Run 2 | Run 3 | Verdict |
+| ----------------------------------------------------- | ------ | ----- | ----- | ----- | ------- |
+| 1. Retrieved chunk contains the answer                | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 2. Every answer names a source                        | 5 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 3. Gate stops out-of-corpus questions                 | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 4. Chunks keep complete sentences                     | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 5. Specific facts are supported by retrieved evidence | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+
+### Real Output — Hybrid
+
+The answer-bearing source remained in the retrieved top three for all five
+test questions:
+
+```text
+Housing:
+Best distance: 0.1969
+Sources retrieved: admin_housing_lottery.txt,
+advising_registration.txt, housing_tamsin_court.txt
+
+Dining:
+Best distance: 0.2206
+Sources retrieved: admin_dining_dollars.txt,
+admin_meal_plan_changes.txt, dining_halden_hall.txt
+
+Parking:
+Best distance: 0.2085
+Sources retrieved: admin_parking_permits.txt,
+advising_registration.txt, transit_shuttle.txt
+
+Library:
+Best distance: 0.1467
+Sources retrieved: admin_library_holds.txt,
+dining_verrill_street_grill_followup.txt, study_group_rooms.txt
+
+CS 210:
+Best distance: 0.3079
+Sources retrieved: course_cs_210.txt,
+course_cs_210_exams.txt, course_cs_340_exams.txt
+```
+
+All five questions passed all three generated-answer runs.
+
+The relevance gate also still refused all five out-of-corpus questions:
+
+```text
+refused  (best distance 0.825)  What is the capital of Mongolia?
+refused  (best distance 0.934)  How do I change the oil in a diesel engine?
+refused  (best distance 0.886)  Who won the 1994 World Cup?
+refused  (best distance 0.844)  What is the recommended dosage of ibuprofen for a headache?
+refused  (best distance 0.896)  How do I write a for loop in Rust?
+-> gate refused 5 of 5
+```
+
+For Criterion 4, I ran `python app.py chunks -n 5` three times after enabling
+hybrid retrieval. All 5 of 5 sampled chunks had complete sentence/document
+boundaries in each check.
+
+**Did the second improvement help?**
+
+The second improvement produced a mixed result.
+
+It preserved all five acceptance criteria at 5 of 5 in all three runs, so it
+did not cause a measured regression in answer correctness, source attribution,
+the relevance gate, chunk boundaries, or factual grounding.
+
+It also changed some distractor results in a more query-specific direction.
+For example, the housing query previously retrieved
+`course_stat_150_exams.txt` as one of its three results; hybrid retrieval
+instead returned `housing_tamsin_court.txt`. For the CS 210 query, hybrid
+retrieval returned `course_cs_210.txt` instead of the unrelated
+`course_engl_205_exams.txt`.
+
+However, hybrid retrieval did not improve the acceptance scores because they
+were already 5 of 5. It also used 6,268 tokens in the evaluation compared with
+5,894 tokens for the simpler `TOP_K = 3` system, an increase of 374 tokens.
+
+Based on these measurements, hybrid retrieval preserved the measured quality
+and improved some retrieved-result relevance, but the simpler `TOP_K = 3`
+version remained more token-efficient. I would keep testing hybrid retrieval
+on a larger and more difficult question set before deciding that it should
+replace the simpler retriever.
 
 ## How I Used AI — Unit 2
 

@@ -135,123 +135,346 @@ I kept the cutoff at `0.6` because it falls clearly between those two groups. A 
 
 ## Run Log — Before
 
-<!-- Your five criteria, three runs each. `python run_eval.py --label before`
-     runs the questions, puts the OUT_OF_SCOPE ones through the gate, and
-     writes it all into results/ for you. Targets come from criteria.md; the
-     verdict column is your call.
+| Criterion                                             | Target | Run 1 | Run 2 | Run 3 | Verdict |
+| ----------------------------------------------------- | ------ | ----- | ----- | ----- | ------- |
+| 1. Retrieved chunk contains the answer                | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 2. Every answer names a source                        | 5 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 3. Gate stops out-of-corpus questions                 | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 4. Chunks keep complete sentences                     | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
+| 5. Specific facts are supported by retrieved evidence | 4 of 5 | 5/5   | 5/5   | 5/5   | MET     |
 
-     Criterion 3 is measured in one deterministic pass rather than three, so
-     the same number goes in all three run columns. That's correct, not lazy.
+The generated-answer and gate evidence below comes from
+`results/run_2026-09-23_1618_before.md`, produced by
+`run_eval.py::main`.
 
-     Milestone 1. -->
+Retrieval was performed by `store.py::search`, and retrieved chunks were
+produced by `chunker.py::split_documents`.
 
-| Criterion                              | Target | Run 1 | Run 2 | Run 3 | Verdict |
-| -------------------------------------- | ------ | ----- | ----- | ----- | ------- |
-| 1. Retrieved chunk contains the answer | 4 of 5 |       |       |       |         |
-| 2. Every answer names a source         | 5 of 5 |       |       |       |         |
-| 3. Gate stops out-of-corpus questions  | 4 of 5 |       |       |       |         |
-| 4.                                     |        |       |       |       |         |
-| 5.                                     |        |       |       |       |         |
+### Real Output — Criterion 1
 
-<!-- Underneath, paste the REAL output for each criterion from one of your
-     runs — the actual text your system produced, not a description of it.
-     Name the file and function that produced it. -->
+The criterion asks whether the retrieved chunks contain the answer for at least
+4 of the 5 test questions.
+
+Actual retrieval output from run 1:
+
+```text
+How are housing lottery numbers determined for juniors and seniors?
+
+Best distance: 0.1969
+Sources retrieved: admin_housing_lottery.txt, admin_parking_permits.txt,
+advising_registration.txt, course_stat_150_exams.txt, housing_tamsin_court.txt
+
+Do unused dining dollars roll over from spring to the next fall?
+
+Best distance: 0.2206
+Sources retrieved: admin_dining_dollars.txt, admin_meal_plan_changes.txt,
+admin_parking_permits.txt, dining_halden_hall.txt, dining_north_kitchen.txt
+
+How quickly do west lot student parking permits sell out?
+
+Best distance: 0.2085
+Sources retrieved: admin_library_holds.txt, admin_parking_permits.txt,
+advising_registration.txt, dining_halden_hall.txt, transit_shuttle.txt
+
+How long does a hold on a checked-out library book usually take to arrive?
+
+Best distance: 0.1467
+Sources retrieved: admin_library_holds.txt,
+dining_halden_hall_followup.txt,
+dining_verrill_street_grill_followup.txt,
+money_textbooks.txt,
+study_group_rooms.txt
+
+What material are the CS 210 exams drawn from?
+
+Best distance: 0.3079
+Sources retrieved: course_cs_210.txt, course_cs_210_exams.txt,
+course_cs_340_exams.txt, course_engl_205.txt,
+course_engl_205_exams.txt
+```
+
+For all 5 questions, the retrieved results included the document containing the
+answer. The same retrieval results were produced in all three runs.
+
+### Real Output — Criterion 2
+
+The criterion asks whether every produced answer names at least one real source
+document.
+
+Actual answers from run 1:
+
+```text
+Housing:
+
+For juniors and seniors, housing lottery numbers are ordered by accumulated
+credit hours first, with a random tie-break used only when necessary
+(admin_housing_lottery.txt).
+
+Dining:
+
+No, unused dining dollars do not roll over from spring to the following
+autumn; whatever is left in May disappears
+(from admin_dining_dollars.txt).
+
+Parking:
+
+Student permits for the west lots sell out in about three days
+(admin_parking_permits.txt).
+
+Library:
+
+A hold on a checked-out book usually arrives in two to three days.
+(Source: admin_library_holds.txt)
+
+CS 210:
+
+The CS 210 exams are drawn from lecture material rather than the textbook.
+
+Sources: course_cs_210_exams.txt and course_cs_210.txt
+```
+
+All 5 of 5 answers named at least one real source document in each of the three
+runs.
+
+### Real Output — Criterion 3
+
+This criterion is measured by `run_eval.py::check_out_of_scope` using the
+relevance cutoff of `0.6`.
+
+Actual output:
+
+```text
+refused  (best distance 0.825)  What is the capital of Mongolia?
+refused  (best distance 0.934)  How do I change the oil in a diesel engine?
+refused  (best distance 0.886)  Who won the 1994 World Cup?
+refused  (best distance 0.844)  What is the recommended dosage of ibuprofen for a headache?
+refused  (best distance 0.896)  How do I write a for loop in Rust?
+-> gate refused 5 of 5
+```
+
+The target was at least 4 of 5 refusals. The system refused all 5 of 5.
+
+Retrieval and the relevance gate are deterministic, so the same 5/5 result is
+recorded in all three run columns.
+
+### Real Output — Criterion 4
+
+This criterion was checked with `app.py::cmd_chunks` using chunks produced by
+`chunker.py::split_documents`.
+
+The same deterministic sample was checked three times.
+
+Actual sampled chunks:
+
+```text
+Chunk 1 | source: admin_add_drop_deadline.txt#0
+produced by: chunker.py::split_documents
+
+On the add/drop deadline
+
+You can add a course through the end of the second week. Dropping is a longer
+window — through the end of week six — but a drop after week two shows as a W
+on your transcript. Nothing anywhere on the registrar's site says this plainly,
+and students find out from each other.
+
+Chunk 2 | source: course_biol_160.txt#0
+produced by: chunker.py::split_documents
+
+BIOL 160 Cell Biology
+
+I lived here my sophomore year. Format is lecture three times a week with a
+weekly lab. Assessment: four unit tests and a cumulative final. Not curved.
+
+Expect 9 to 11 hours a week, the heaviest first-year course by reputation.
+
+The one piece of advice: the unit tests come fast, roughly every three weeks;
+falling behind once is very hard to recover from.
+
+Chunk 3 | source: course_hist_118_workload.txt#0
+produced by: chunker.py::split_documents
+
+Workload for HIST 118 Modern World History
+
+People keep asking so: a lot of reading, about 120 pages a week, but no problem
+sets. That's real time, not optimistic time.
+
+It's front-loaded — the first month is heavier than the rest, partly because
+you're learning the format.
+
+Chunk 4 | source: dining_pellew_dining_hall_followup.txt#0
+produced by: chunker.py::split_documents
+
+Re: Pellew Dining Hall
+
+Adding to what people have said about Pellew Dining Hall. The wait figure of
+12 to 18 minutes at peak matches what I've seen. If you're trying to eat
+between classes, go before 11:45 and it's a different building entirely.
+
+Also worth saying: the furthest hall from anywhere, next to the athletics
+centre. Nobody tells you this at orientation.
+
+Chunk 5 | source: housing_innisfree_hall.txt#0
+produced by: chunker.py::split_documents
+
+Innisfree Hall — what it's actually like
+
+Transferred in last year, so take this with a grain of salt. Built 1991,
+renovated 2022. Rooms are doubles arranged as pairs sharing one bathroom
+between two rooms.
+
+The good: the shared-bathroom-between-two-rooms arrangement is the best
+compromise on campus.
+
+The bad: no air conditioning, which matters for the first three weeks of
+September.
+
+Laundry costs $1.75 wash, $1.75 dry, app-based. On noise: moderate; the
+building is L-shaped and the short wing is much quieter.
+```
+
+All 5 of 5 sampled chunks began and ended on complete sentence/document
+boundaries in each check.
+
+### Real Output — Criterion 5
+
+The criterion asks whether every specific factual detail used in the answer is
+directly supported by retrieved evidence.
+
+Actual run-1 answers:
+
+```text
+Housing:
+For juniors and seniors, housing lottery numbers are ordered by accumulated
+credit hours first, with a random tie-break used only when necessary
+(admin_housing_lottery.txt).
+
+Dining:
+No, unused dining dollars do not roll over from spring to the following
+autumn; whatever is left in May disappears
+(from admin_dining_dollars.txt).
+
+Parking:
+Student permits for the west lots sell out in about three days
+(admin_parking_permits.txt).
+
+Library:
+A hold on a checked-out book usually arrives in two to three days.
+(Source: admin_library_holds.txt)
+
+CS 210:
+The CS 210 exams are drawn from lecture material rather than the textbook.
+
+Sources: course_cs_210_exams.txt and course_cs_210.txt
+```
+
+The retrieved source documents directly support those details:
+
+```text
+admin_housing_lottery.txt:
+juniors and seniors are ordered by accumulated credit hours first,
+and only tie-break randomly.
+
+admin_dining_dollars.txt:
+Whatever is left in May disappears.
+
+admin_parking_permits.txt:
+Student permits for the west lots go on sale in August and sell out
+in about three days.
+
+admin_library_holds.txt:
+You can place a hold on a checked-out book and it usually arrives
+in two to three days.
+
+course_cs_210_exams.txt:
+Two midterms and a final, all drawn from lecture material rather than
+the textbook.
+```
+
+All 5 of 5 answers had their specific factual details directly supported by
+retrieved evidence in all three runs.
 
 ## Verdicts
 
-<!-- MET or MISSED for each of the five, against the target you wrote last
-     unit — not a new one. Plus a sentence on how you decided. That sentence
-     matters most where it was close.
-
-     If your target said 4 of 5 and your runs came out 4, 3, 4, that's a MISS.
-     The target has to hold, not show up occasionally.
-
-     Milestone 2. -->
-
-| #   | Criterion | Verdict | How I decided |
-| --- | --------- | ------- | ------------- |
-| 1   |           |         |               |
-| 2   |           |         |               |
-| 3   |           |         |               |
-| 4   |           |         |               |
-| 5   |           |         |               |
+| # | Criterion| Verdict | How I decided|| --- | -------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | Retrieved chunk contains the answer | MET | The frozen target was at least 4 of 5 questions retrieving a chunk that contained the answer. All three runs achieved 5 of 5, so the criterion held consistently. |
+| 2 | Every answer names a source | MET | The target was 5 of 5 produced answers naming at least one real source document. All 5 answers named a real source in all three runs. |
+| 3 | Gate stops out-of-corpus questions | MET | The target was for the relevance gate to refuse at least 4 of 5 clearly out-of-corpus questions. It refused all 5 of 5. |
+| 4 | Chunks keep complete sentences | MET | The target was for at least 4 of 5 sampled `campus_life` chunks to begin and end with complete sentence boundaries. All 5 sampled chunks had complete boundaries in all three checks. |
+| 5 | Specific facts are supported by retrieved evidence | MET | The frozen target was for at least 4 of 5 test answers to have every specific factual detail directly supported by retrieved evidence. All 5 of 5 answers were supported in all three runs. |
 
 ## Diagnoses
 
-<!-- For each miss: which stage caused it, and how. The stage alone isn't
-     enough — you need the mechanism.
+No criteria were missed.
 
-     Not a diagnosis: "Question 3 didn't work."
-     A diagnosis:     "Question 3 asks about laundry costs. The answer is in
-                       one sentence that got split across two chunks, so
-                       neither chunk on its own contains it."
+However, Criterion 4 was set too low. The original target required at least
+4 of 5 sampled chunks to have complete sentence boundaries, but the
+whole-document chunking strategy produced 5 of 5 complete chunks in every
+check.
 
-     The five stages: loading → chunking → embedding → retrieval → generation.
+If I wrote this criterion again, I would tighten the target to 5 of 5 because
+my whole-document chunking strategy is specifically designed to preserve each
+short document intact.
 
-     Look for a pattern. If three misses all ask about numbers, that's one
-     problem, not three.
-
-     Missed nothing? Say so, then say honestly whether your targets were set
-     low, and which one you'd tighten and to what.
-
-     Milestone 3. -->
+I also noticed a retrieval-stage weakness even though it did not cause a
+criterion failure. With `TOP_K = 5`, the system often retrieved the correct
+answer-bearing document along with several unrelated distractor chunks. For
+example, the housing question retrieved `admin_housing_lottery.txt`, but also
+retrieved parking, advising, statistics, and another housing document. This
+means the generation stage receives more irrelevant context than it needs.
 
 ## The Improvement
 
 **What I changed:**
 
+I will reduce retrieval `TOP_K` from `5` to `3` in `config.py`.
 **Why I picked it:**
 
-<!-- Connect it to a specific diagnosis above in one sentence. If you can't,
-     you picked a fix because it sounded impressive. -->
+The baseline showed that the answer-bearing document was already ranked highly
+for all five test questions, but the five-result retrieval set also contained
+unrelated distractor chunks. Reducing `TOP_K` from 5 to 3 should give the model
+less irrelevant context while still preserving the evidence needed to answer
+the questions. I will measure the full test again to see whether that actually
+helps or hurts.
 
 ### Run Log — After
 
-<!-- Same format, same five criteria, three runs each.
-     `python run_eval.py --label after` -->
-
-| Criterion                              | Target | Run 1 | Run 2 | Run 3 | Verdict |
-| -------------------------------------- | ------ | ----- | ----- | ----- | ------- |
-| 1. Retrieved chunk contains the answer | 4 of 5 |       |       |       |         |
-| 2. Every answer names a source         | 5 of 5 |       |       |       |         |
-| 3. Gate stops out-of-corpus questions  | 4 of 5 |       |       |       |         |
-| 4.                                     |        |       |       |       |         |
-| 5.                                     |        |       |       |       |         |
+| Criterion                                             | Target | Run 1 | Run 2 | Run 3 | Verdict |
+| ----------------------------------------------------- | ------ | ----- | ----- | ----- | ------- |
+| 1. Retrieved chunk contains the answer                | 4 of 5 |       |       |       |         |
+| 2. Every answer names a source                        | 5 of 5 |       |       |       |         |
+| 3. Gate stops out-of-corpus questions                 | 4 of 5 |       |       |       |         |
+| 4. Chunks keep complete sentences                     | 4 of 5 |       |       |       |         |
+| 5. Specific facts are supported by retrieved evidence | 4 of 5 |       |       |       |         |
 
 **Did it help?**
 
-<!-- Say plainly whether it did, and how you know. If it made things worse,
-     say that — a change that backfired, honestly reported, earns full credit
-     and is more interesting than one that worked. What matters is that you can
-     tell.
+To be completed after running:
 
-     Milestone 4. -->
+`python run_eval.py --label after`
+
+I will compare this run log directly with the Before run log and report whether
+reducing `TOP_K` from 5 to 3 improved, preserved, or hurt the measured results.
 
 ## What's Still Broken
 
-<!-- For each criterion still missed after your fix: what you'd do about it,
-     and why you stopped where you did.
+To be completed after the After evaluation.
 
-     "I ran out of time" is fine if it's true. Pretending nothing is left is
-     not.
+If any criterion is missed after the improvement, I will state which pipeline
+stage caused the remaining problem, what I would change next, and why I stopped
+after this one measured improvement.
 
-     Milestone 5. -->
+If all five criteria are still met, I will still report any remaining weakness
+I observed rather than claiming the system is perfect.
 
 ## What I'd Do Differently
 
-<!-- Knowing what you know now — which of your five criteria would you write
-     differently, and why?
+Knowing what I know now, I would write Criterion 4 more strictly.
 
-     Milestone 5. -->
+The original criterion required at least 4 of 5 sampled `campus_life` chunks
+to contain complete sentence boundaries. Because my chunking strategy keeps
+each short document intact and produced 5 of 5 complete chunks every time I
+checked it, I would set the target to 5 of 5 in a future version.
 
-```
-
-```
-
-```
-
-```
-
-```
-
-```
+I would not change the original Unit 1 criterion now because it was measurable
+as written and existed before I saw the results. The stricter 5-of-5 target is
+what I learned from testing it.

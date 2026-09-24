@@ -185,10 +185,18 @@ def search(
     variant: str = "default",
 ) -> list[Result]:
     """
-    Retrieve the chunks closest in meaning to a question.
+    Retrieve chunks with hybrid semantic + BM25 ranking.
 
-    Returns them nearest-first, each with its distance.
+    Chroma supplies a semantic candidate pool. BM25 then adds an exact-term
+    signal, and weighted reciprocal-rank fusion combines the two rankings.
+
+    The Result.distance value remains the original cosine distance so the
+    existing relevance gate keeps using the same 0.6 distance scale.
     """
+    import re
+
+    from rank_bm25 import BM25Okapi
+
     top_k = top_k or config.TOP_K
     name = config.collection_name(corpus, variant)
 
@@ -199,15 +207,60 @@ def search(
             f"No index called '{name}'. Run `python app.py index` first."
         ) from exc
 
+    # Pull a larger semantic candidate pool, then rerank it with BM25.
+    candidate_count = min(max(top_k * 4, 12), collection.count())
+
     raw = collection.query(
         query_embeddings=embed([question]),
-        n_results=min(top_k, collection.count()),
+        n_results=candidate_count,
     )
 
+    documents = raw["documents"][0]
+    metadatas = raw["metadatas"][0]
+    distances = raw["distances"][0]
+
+    def tokenize(text: str) -> list[str]:
+        return re.findall(r"[a-z0-9]+", text.lower())
+
+    tokenized_documents = [tokenize(text) for text in documents]
+    bm25 = BM25Okapi(tokenized_documents)
+    bm25_scores = bm25.get_scores(tokenize(question))
+
+    # Chroma already returns candidates nearest-first, so their positions are
+    # the semantic ranking.
+    semantic_rank = {index: index + 1 for index in range(len(documents))}
+
+    # Python's stable sort preserves semantic order when BM25 scores tie.
+    bm25_order = sorted(
+        range(len(documents)),
+        key=lambda index: bm25_scores[index],
+        reverse=True,
+    )
+    bm25_rank = {
+        index: rank
+        for rank, index in enumerate(bm25_order, start=1)
+    }
+
+    # Weighted reciprocal-rank fusion: semantic meaning remains the stronger
+    # signal while BM25 can boost exact names, numbers, and phrases.
+    def hybrid_score(index: int) -> float:
+        semantic = 0.7 / (60 + semantic_rank[index])
+        keyword = 0.3 / (60 + bm25_rank[index])
+        return semantic + keyword
+
+    ranked_indexes = sorted(
+        range(len(documents)),
+        key=hybrid_score,
+        reverse=True,
+    )[:top_k]
+
     results: list[Result] = []
-    for text, meta, distance in zip(
-        raw["documents"][0], raw["metadatas"][0], raw["distances"][0]
-    ):
+
+    for index in ranked_indexes:
+        text = documents[index]
+        meta = metadatas[index]
+        distance = distances[index]
+
         results.append(
             Result(
                 text=text,
@@ -217,6 +270,7 @@ def search(
                 produced_by=str(meta.get("produced_by", "unknown")),
             )
         )
+
     return results
 
 

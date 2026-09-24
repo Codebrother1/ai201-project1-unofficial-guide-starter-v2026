@@ -395,12 +395,13 @@ retrieved evidence in all three runs.
 
 ## Verdicts
 
-| # | Criterion| Verdict | How I decided|| --- | -------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 | Retrieved chunk contains the answer | MET | The frozen target was at least 4 of 5 questions retrieving a chunk that contained the answer. All three runs achieved 5 of 5, so the criterion held consistently. |
-| 2 | Every answer names a source | MET | The target was 5 of 5 produced answers naming at least one real source document. All 5 answers named a real source in all three runs. |
-| 3 | Gate stops out-of-corpus questions | MET | The target was for the relevance gate to refuse at least 4 of 5 clearly out-of-corpus questions. It refused all 5 of 5. |
-| 4 | Chunks keep complete sentences | MET | The target was for at least 4 of 5 sampled `campus_life` chunks to begin and end with complete sentence boundaries. All 5 sampled chunks had complete boundaries in all three checks. |
-| 5 | Specific facts are supported by retrieved evidence | MET | The frozen target was for at least 4 of 5 test answers to have every specific factual detail directly supported by retrieved evidence. All 5 of 5 answers were supported in all three runs. |
+| #   | Criterion                                          | Verdict | How I decided                                                                                                                                                                               |
+| --- | -------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Retrieved chunk contains the answer                | MET     | The frozen target was at least 4 of 5 questions retrieving a chunk that contained the answer. All three runs achieved 5 of 5, so the criterion held consistently.                           |
+| 2   | Every answer names a source                        | MET     | The target was 5 of 5 produced answers naming at least one real source document. All 5 answers named a real source in all three runs.                                                       |
+| 3   | Gate stops out-of-corpus questions                 | MET     | The target was for the relevance gate to refuse at least 4 of 5 clearly out-of-corpus questions. It refused all 5 of 5.                                                                     |
+| 4   | Chunks keep complete sentences                     | MET     | The target was for at least 4 of 5 sampled `campus_life` chunks to begin and end with complete sentence boundaries. All 5 sampled chunks had complete boundaries in all three checks.       |
+| 5   | Specific facts are supported by retrieved evidence | MET     | The frozen target was for at least 4 of 5 test answers to have every specific factual detail directly supported by retrieved evidence. All 5 of 5 answers were supported in all three runs. |
 
 ## Diagnoses
 

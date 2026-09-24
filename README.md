@@ -574,6 +574,29 @@ I would not rewrite the original Unit 1 criterion now because it was measurable
 as written and existed before I saw the results. The stricter 5-of-5 target is
 what I learned from testing it.
 
+## Stretch Feature — Second Measured Improvement
+
+I am doing the optional second measured improvement for Unit 2.
+
+**What I will change:**
+
+I will add hybrid retrieval that combines the existing semantic vector search
+with BM25 keyword search.
+
+**Why I picked it:**
+
+After reducing `TOP_K` from 5 to 3, all five criteria still passed, but the
+retrieved results still included unrelated distractor documents. Hybrid search
+may help queries with exact names, course numbers, locations, and phrases by
+combining semantic similarity with exact-term matching.
+
+**How I will measure it:**
+
+I will run the same five acceptance criteria again with three runs each and
+save a third run log. I will compare the hybrid-search results with the
+`TOP_K = 3` After results and report whether the second improvement helped,
+hurt, or preserved the measured performance.
+
 ## How I Used AI — Unit 2
 
 I used AI as a testing and debugging partner while I worked through Unit 2.
